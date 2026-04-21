@@ -111,17 +111,12 @@ void* bakerActivities(void* bakerId) {
     char *color = colors[id % 12];
     for (int i = 0; i<numberOfRecipies; i++) {
         struct recipe currentRecipe = recipiesList[i]; // this is a struct that holds a list of the recipies with (name, ingrediens -list, tools-list)
-        // char *currentRecipe[] = currentRecipeInfo->recipiesList[j];
-        // lock it let the baker do the things
         printf("Baker %s starting the %s recipe\n", color, currentRecipe.recipeName);
         int numberOfIngreadients = 0; // 3
         while (currentRecipe.ingredienceIds[numberOfIngreadients] != 0) {
             numberOfIngreadients++;
         }
-        int numberOfTools = 0;
-        while (currentRecipe.toolIds[numberOfTools] != 0) { // do i need this if it is always going to be 3
-            numberOfTools++;
-        }
+        
         for (int j = 0; j < numberOfIngreadients; j++) { // acquire and release ingredients loop
             if (currentRecipe.ingredienceIds[j] >= 1 && currentRecipe.ingredienceIds[j] <= 6) {
                 acquire.sem_num = 0; // pantryIndex
@@ -129,7 +124,6 @@ void* bakerActivities(void* bakerId) {
                     perror("semop acquired failed\n");
                     exit(1);
                 }
-                // do the stuff
                 printf("Baker %s getting the ingrediance in the pantry\n", color);
                 release.sem_num = 0;
                 if (semop(semId, &release, 1) == -1) {
@@ -143,7 +137,6 @@ void* bakerActivities(void* bakerId) {
                     perror("semop acquired failed\n");
                     exit(1);
                 }
-                // do the stuff
                 printf("Baker %s getting the ingrediance in the fridge\n", color);
                 release.sem_num = 1;
                 if (semop(semId, &release, 1) == -1) {
@@ -152,15 +145,13 @@ void* bakerActivities(void* bakerId) {
                 }
             }
         }
-        for (int k = 0; k < numberOfTools; k++) { // aquier tools loop
+        for (int k = 0; k < 3; k++) { // aquier tools loop
             if (currentRecipe.toolIds[k] == 10) {
                 acquire.sem_num = 2; // pantryIndex
                 if (semop(semId, &acquire, 1) == -1) {
                     perror("semop acquired failed\n");
                     exit(1);
                 }
-                // do the stuff
-                printf("Baker %s got the mixer\n", color);
             }
             if (currentRecipe.toolIds[k] == 11) {
                 acquire.sem_num = 3; // pantryIndex
@@ -168,9 +159,6 @@ void* bakerActivities(void* bakerId) {
                     perror("semop acquired failed\n");
                     exit(1);
                 }
-                // do the stuff
-                printf("Baker %s got the bowl\n", color);
-                
             }
             if (currentRecipe.toolIds[k] == 12) {
                 acquire.sem_num = 4; // pantryIndex
@@ -178,12 +166,9 @@ void* bakerActivities(void* bakerId) {
                     perror("semop acquired failed\n");
                     exit(1);
                 }
-                // do the stuff
-                printf("Baker %s got the spoon\n", color);
-                
             }
         }
-        printf("Got all of the tools, now mixing the ingerediens together\n");
+        printf("Baker %s got all of the tools, now mixing the ingerediens together\n", color);
         for (int l = 0; l < numberOfTools; l++)  {   // release loop
             if (currentRecipe.toolIds[l] == 10) {
                 release.sem_num = 2;
@@ -216,7 +201,6 @@ void* bakerActivities(void* bakerId) {
                 perror("semop acquired failed\n");
                 exit(1);
             }
-            // do the stuff
             printf("Baker %s got the oven and is baking the %s recipe\n", color, currentRecipe.recipeName);
             release.sem_num = 5;
             if (semop(semId, &release, 1) == -1) {
