@@ -18,6 +18,8 @@
 volatile sig_atomic_t shutdown = 1;
 
 void* bakerActivities(void* arg); 
+void acquireSemaphore (void);
+void releaseSemaphore (void);
 
 void handleSigint(int sig) { // helpes with garaceful shutdown
     if (sig == SIGINT) {
@@ -112,7 +114,7 @@ void* bakerActivities(void* bakerId) {
     for (int i = 0; i<numberOfRecipies; i++) {
         struct recipe currentRecipe = recipiesList[i]; // this is a struct that holds a list of the recipies with (name, ingrediens -list, tools-list)
         printf("Baker %s starting the %s recipe\n", color, currentRecipe.recipeName);
-        int numberOfIngreadients = 0; // 3
+        int numberOfIngreadients = 0;
         while (currentRecipe.ingredienceIds[numberOfIngreadients] != 0) {
             numberOfIngreadients++;
         }
@@ -120,95 +122,73 @@ void* bakerActivities(void* bakerId) {
         for (int j = 0; j < numberOfIngreadients; j++) { // acquire and release ingredients loop
             if (currentRecipe.ingredienceIds[j] >= 1 && currentRecipe.ingredienceIds[j] <= 6) {
                 acquire.sem_num = 0; // pantryIndex
-                if (semop(semId, &acquire, 1) == -1) {
-                    perror("semop acquired failed\n");
-                    exit(1);
-                }
+                acquireSemaphore();
                 printf("Baker %s getting the ingrediance in the pantry\n", color);
                 release.sem_num = 0;
-                if (semop(semId, &release, 1) == -1) {
-                    perror("semop release failed\n");
-                    exit(1);
-                }
+                releaseSemaphore();
             }
             if (currentRecipe.ingredienceIds[j] >= 7 && currentRecipe.ingredienceIds[j] <= 9) {
                 acquire.sem_num = 1; // fridgeIndex
-                if (semop(semId, &acquire, 1) == -1) {
-                    perror("semop acquired failed\n");
-                    exit(1);
-                }
+                acquireSemaphore();
                 printf("Baker %s getting the ingrediance in the fridge\n", color);
                 release.sem_num = 1;
-                if (semop(semId, &release, 1) == -1) {
-                    perror("semop release failed\n");
-                    exit(1);
-                }
+                releaseSemaphore();
             }
         }
         for (int k = 0; k < 3; k++) { // aquier tools loop
             if (currentRecipe.toolIds[k] == 10) {
-                acquire.sem_num = 2; // pantryIndex
-                if (semop(semId, &acquire, 1) == -1) {
-                    perror("semop acquired failed\n");
-                    exit(1);
-                }
+                acquire.sem_num = 2; // mixerIndex
+                acquireSemaphore();
             }
             if (currentRecipe.toolIds[k] == 11) {
-                acquire.sem_num = 3; // pantryIndex
-                if (semop(semId, &acquire, 1) == -1) {
-                    perror("semop acquired failed\n");
-                    exit(1);
-                }
+                acquire.sem_num = 3; // bowlIndex
+                acquireSemaphore();
             }
             if (currentRecipe.toolIds[k] == 12) {
-                acquire.sem_num = 4; // pantryIndex
-                if (semop(semId, &acquire, 1) == -1) {
-                    perror("semop acquired failed\n");
-                    exit(1);
-                }
+                acquire.sem_num = 4; // spoonIndex
+                acquireSemaphore();
             }
         }
         printf("Baker %s got all of the tools, now mixing the ingerediens together\n", color);
-        for (int l = 0; l < numberOfTools; l++)  {   // release loop
+        for (int l = 0; l < 3; l++)  {   // release loop
             if (currentRecipe.toolIds[l] == 10) {
                 release.sem_num = 2;
-                if (semop(semId, &release, 1) == -1) {
-                    perror("semop release failed\n");
-                    exit(1);
-                }
+                releaseSemaphore();
                 printf("releaseing the mixer\n");
             }
             if (currentRecipe.toolIds[l] == 11) {
                 release.sem_num = 3;
-                if (semop(semId, &release, 1) == -1) {
-                    perror("semop release failed\n");
-                    exit(1);
-                }
+                releaseSemaphore();
                 printf("releasing the bowl\n");
             }
             if (currentRecipe.toolIds[l] == 12) {
                 release.sem_num = 4;
-                if (semop(semId, &release, 1) == -1) {
-                    perror("semop release failed\n");
-                    exit(1);
-                }
+                releaseSemaphore();
                 printf("releasing the spoon\n");
             }
         }
         if (currentRecipe.toolIds[3] == 13) { // there is only one oven so no need for a looop
             acquire.sem_num = 5; // ovenIndex
-            if (semop(semId, &acquire, 1) == -1) {
-                perror("semop acquired failed\n");
-                exit(1);
-            }
+            acquireSemaphore();
             printf("Baker %s got the oven and is baking the %s recipe\n", color, currentRecipe.recipeName);
             release.sem_num = 5;
-            if (semop(semId, &release, 1) == -1) {
-                perror("semop release failed\n");
-                exit(1);
-            }  
+            releaseSemaphore(); 
         }
         printf("Baker %s finished the %s recipe\n", color, currentRecipe.recipeName);
     }
     return NULL;
+}
+
+void acquireSemaphore (void) {
+    if (semop(semId, &acquire, 1) == -1) {
+        perror("semop acquired failed\n");
+        exit(1);
+    }
+}
+
+void releaseSemaphore (void) {
+    if (semop(semId, &release, 1) == -1) {
+        perror("semop release failed\n");
+        exit(1);
+    }
 }
