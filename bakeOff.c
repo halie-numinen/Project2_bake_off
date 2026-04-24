@@ -15,6 +15,80 @@
 // semaphores
 #include <sys/sem.h>
 
+
+//Below are all the structs with resources, ingredients, and recipes
+struct{
+    const char* key;
+    int value;
+} dictionaryEntry;
+
+dictionaryEntry kitchen[] = {
+    {"Mixer", 2},
+    {"Pantry", 1},
+    {"Refrigerator", 2},
+    {"Bowl", 3},
+    {"Spoon", 5},
+    {"Oven", 1}
+};
+
+dictionaryEntry pantryIngredients[] = {
+    {"Flour", 1},
+    {"Sugar", 1},
+    {"Yeast", 1},
+    {"Baking Soda", 1},
+    {"Salt", 1},
+    {"Cinnamon", 1}
+};
+
+dictionaryEntry fridgeIngredients[] = {
+    {"Egg(s)", 2},
+    {"Milk", 1},
+    {"Butter", 1}
+};
+
+dictionaryEntry cookieIngredients[] = {
+    {"Flour", 1},
+    {"Sugar", 1},
+    {"Milk", 1},
+    {"Butter", 1},
+};
+
+dictionaryEntry pancakeIngredients[] = {
+    {"Flour", 1},
+    {"Sugar", 1},
+    {"Baking Soda", 1},
+    {"Salt", 1},
+    {"Egg", 1}
+    {"Milk", 1}
+    {"Butter", 1}
+};
+
+dictionaryEntry pizzaDoughIngredients[] = {
+    {"Yeast", 1},
+    {"Sugar", 1},
+    {"Salt", 1},
+};
+
+dictionaryEntry softPretzelIngredients[] = {
+    {"Flour", 1},
+    {"Sugar", 1},
+    {"Baking Soda", 1},
+    {"Salt", 1},
+    {"Egg", 1}
+    {"Yeast", 1}
+};
+
+dictionaryEntry cinnamonRollsIngredients[] = {
+    {"Flour", 1},
+    {"Sugar", 1},
+    {"Cinnamon", 1},
+    {"Salt", 1},
+    {"Egg", 1}
+    {"Milk", 1}
+    {"Butter", 1}
+};
+
+
 volatile sig_atomic_t shutdown = 1;
 
 void* bakerActivities(void* arg); 
@@ -136,6 +210,14 @@ void* bakerActivities(void* bakerId) {
             }
         }
         for (int k = 0; k < 3; k++) { // aquier tools loop
+
+            //Ramsey condition
+            int value = (rand() % 10) + 1;
+            if (id == 1 && value == 5){}
+                releaseSeamaphore();
+                printf("Baker %s has been RAMSIED and must start over!")
+            } 
+
             if (currentRecipe.toolIds[k] == 10) {
                 acquire.sem_num = 2; // mixerIndex
                 acquireSemaphore();
