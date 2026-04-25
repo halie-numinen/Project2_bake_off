@@ -169,14 +169,14 @@ void* bakerActivities(void* bakerId) {
         struct recipe currentRecipe = recipesList[i]; // this is a struct that holds a list of the recipes with (name, ingrediens -list, tools-list)
         printf("Baker %s starting the %s recipe\n", color, currentRecipe.recipeName);
         int numberOfIngredients = 0;
-        while (currentRecipe.ingredientIds[numberOfIngredients] != 0) {
+        while (currentRecipe.ingredienceIds[numberOfIngredients] != 0) {
             numberOfIngredients++;
         }
         
         int pantry = 0;
         int fridge = 0;
         for (int j = 0; j < numberOfIngredients; j++) {
-            if (currentRecipe.ingredientIds[j] >= 1 && currentRecipe.ingredientIds[j] <= 6) {
+            if (currentRecipe.ingredienceIds[j] >= 1 && currentRecipe.ingredienceIds[j] <= 6) {
                 pantry = 1;
                 break;
             }
@@ -185,7 +185,7 @@ void* bakerActivities(void* bakerId) {
             acquire.sem_num = 0; // pantryIndex
             acquireSemaphore();
             for (int k = 0; k < numberOfIngredients; k++) {
-                int pantryId = currentRecipe.ingredientIds[k];
+                int pantryId = currentRecipe.ingredienceIds[k];
                 if (pantryId >= 1 && pantryId <= 6) {
                     printf("Baker %s is getting the %s ingredient from the pantry\n", color, ingredients[pantryId-1]);
                 }
@@ -203,7 +203,7 @@ void* bakerActivities(void* bakerId) {
             releaseSemaphore();
         }
         for (int j = 0; j < numberOfIngredients; j++) {
-            if (currentRecipe.ingredientIds[j] >= 7 && currentRecipe.ingredientIds[j] <= 9) {
+            if (currentRecipe.ingredienceIds[j] >= 7 && currentRecipe.ingredienceIds[j] <= 9) {
                 fridge = 1;
                 break;
             }
@@ -212,7 +212,7 @@ void* bakerActivities(void* bakerId) {
             acquire.sem_num = 1; // fridgeIndex
             acquireSemaphore();
             for (int k = 0; k < numberOfIngredients; k++) {
-                int fridgeId = currentRecipe.ingredientIds[k];
+                int fridgeId = currentRecipe.ingredienceIds[k];
                 if (fridgeId >= 7 && fridgeId <= 9) {
                     printf("Baker %s is getting the %s ingredient from the fridge\n", color, ingredients[fridgeId-1]);
                 }  
