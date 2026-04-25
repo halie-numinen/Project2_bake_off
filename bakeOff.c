@@ -32,7 +32,7 @@ struct refrigerator {
 };
 struct resource {
     int mixerId;
-    struct pantry pantryIngradiens;
+    struct pantry pantryIngredient;
     struct refrigerator fridge; 
     int bowlId;
     int spoonId;
@@ -43,7 +43,7 @@ struct recipe {
     int ingredienceIds[10];
     int toolIds[5];
 };
-struct recipe recipiesList[5];
+struct recipe recipesList[5];
 
 volatile sig_atomic_t shutdown = 1;
 
@@ -51,7 +51,7 @@ void* bakerActivities(void* arg);
 void acquireSemaphore (void);
 void releaseSemaphore (void);
 
-void handleSigint(int sig) { // helpes with garaceful shutdown
+void handleSigint(int sig) { // helps with graceful shutdown
     if (sig == SIGINT) {
         shutdown = 0;
     }
@@ -84,11 +84,11 @@ int main () {
     bakers = (int)strtol(numberOfBakersString, &errorChecking, 10);
     signal(SIGINT, handleSigint);
 
-    recipiesList[0] = (struct recipe){"cookies", {1, 2, 8, 9, 0}, {10, 11, 12, 13, 0}};
-    recipiesList[1] = (struct recipe){"cancakes", {1, 2, 4, 5, 7, 8, 9, 0}, {10, 11, 12, 13, 0}};
-    recipiesList[2] = (struct recipe){"homemade pizza dough", {3, 2, 5, 0}, {10, 11, 12, 13, 0}};
-    recipiesList[3] = (struct recipe){"soft pretzels", {1, 2, 5, 3, 4, 7, 0}, {10, 11, 12, 13, 0}};
-    recipiesList[4] = (struct recipe){"cinnamon rolls", {1, 2, 5, 9, 7, 6, 0}, {10, 11, 12, 13, 0}};
+    recipesList[0] = (struct recipe){"cookies", {1, 2, 8, 9, 0}, {10, 11, 12, 13, 0}};
+    recipesList[1] = (struct recipe){"pancakes", {1, 2, 4, 5, 7, 8, 9, 0}, {10, 11, 12, 13, 0}};
+    recipesList[2] = (struct recipe){"homemade pizza dough", {3, 2, 5, 0}, {10, 11, 12, 13, 0}};
+    recipesList[3] = (struct recipe){"soft pretzels", {1, 2, 5, 3, 4, 7, 0}, {10, 11, 12, 13, 0}};
+    recipesList[4] = (struct recipe){"cinnamon rolls", {1, 2, 5, 9, 7, 6, 0}, {10, 11, 12, 13, 0}};
 
     if ((shmId = shmget(key, 1024, IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
         perror("Unable to get shared memory\n");
@@ -102,7 +102,7 @@ int main () {
         perror("Unable to attach\n");
         exit(1);
     }
-    int maxAmounts[] = {1, 2, 2, 3, 5, 1}; // pantries, friges, mixers, bowls, spoons, ovens
+    int maxAmounts[] = {1, 2, 2, 3, 5, 1}; // pantries, fridges, mixers, bowls, spoons, ovens
     for (int i = 0; i < 6; i++) {
         if (semctl(semId, i, SETVAL, maxAmounts[i]) == -1) {
             perror("unable to initialize semaphore\n");
@@ -110,12 +110,12 @@ int main () {
         }
     }
 
-    kitchen->pantryIngradiens.flourId = 1;
-    kitchen->pantryIngradiens.sugarId = 2;
-    kitchen->pantryIngradiens.yeastId = 3;
-    kitchen->pantryIngradiens.bakingSodaId = 4;
-    kitchen->pantryIngradiens.saltId = 5;
-    kitchen->pantryIngradiens.cinnamonId = 6;
+    kitchen->pantryIngredient.flourId = 1;
+    kitchen->pantryIngredient.sugarId = 2;
+    kitchen->pantryIngredient.yeastId = 3;
+    kitchen->pantryIngredient.bakingSodaId = 4;
+    kitchen->pantryIngredient.saltId = 5;
+    kitchen->pantryIngredient.cinnamonId = 6;
     kitchen->fridge.eggsId = 7;
     kitchen->fridge.milkId = 8;
     kitchen->fridge.butterId = 9;
@@ -146,7 +146,7 @@ int main () {
         exit(1);
     }
     if (semctl(semId, 0, IPC_RMID) == -1) {
-        perror("Unable to deallocate semophore\n");
+        perror("Unable to deallocate semaphore\n");
         exit(1);
     }
     if (shmctl(shmId, IPC_RMID, 0) < 0) {
@@ -158,25 +158,25 @@ int main () {
 
 void* bakerActivities(void* bakerId) {
     // for the semaphores and locking and unlocking resources
-    int numberOfRecipies = 5;
+    int numberOfRecipes = 5;
     char *ingredients[] = {"flour", "sugar", "yeast", "baking soda", "salt", "cinnamon", "eggs", "milk", "butter"};
     char *colors[] = {"red", "gold", "green", "blue", "yellow", "orange", "purple", "pink", "white", "black", "brown", "silver"};
     int id = *((int*)bakerId);
     free(bakerId);
     char *color = colors[id % 12];
-    for (int i = 0; i<numberOfRecipies; i++) {
+    for (int i = 0; i<numberOfRecipes; i++) {
         int ramsied = (rand() % 10) + 1;
-        struct recipe currentRecipe = recipiesList[i]; // this is a struct that holds a list of the recipies with (name, ingrediens -list, tools-list)
+        struct recipe currentRecipe = recipesList[i]; // this is a struct that holds a list of the recipes with (name, ingrediens -list, tools-list)
         printf("Baker %s starting the %s recipe\n", color, currentRecipe.recipeName);
-        int numberOfIngreadients = 0;
-        while (currentRecipe.ingredienceIds[numberOfIngreadients] != 0) {
-            numberOfIngreadients++;
+        int numberOfIngredients = 0;
+        while (currentRecipe.ingredientIds[numberOfIngredients] != 0) {
+            numberOfIngredients++;
         }
         
         int pantry = 0;
         int fridge = 0;
-        for (int j = 0; j < numberOfIngreadients; j++) {
-            if (currentRecipe.ingredienceIds[j] >= 1 && currentRecipe.ingredienceIds[j] <= 6) {
+        for (int j = 0; j < numberOfIngredients; j++) {
+            if (currentRecipe.ingredientIds[j] >= 1 && currentRecipe.ingredientIds[j] <= 6) {
                 pantry = 1;
                 break;
             }
@@ -184,8 +184,8 @@ void* bakerActivities(void* bakerId) {
         if (pantry == 1) {
             acquire.sem_num = 0; // pantryIndex
             acquireSemaphore();
-            for (int k = 0; k < numberOfIngreadients; k++) {
-                int pantryId = currentRecipe.ingredienceIds[k];
+            for (int k = 0; k < numberOfIngredients; k++) {
+                int pantryId = currentRecipe.ingredientIds[k];
                 if (pantryId >= 1 && pantryId <= 6) {
                     printf("Baker %s is getting the %s ingredient from the pantry\n", color, ingredients[pantryId-1]);
                 }
@@ -202,8 +202,8 @@ void* bakerActivities(void* bakerId) {
             release.sem_num = 0;
             releaseSemaphore();
         }
-        for (int j = 0; j < numberOfIngreadients; j++) {
-            if (currentRecipe.ingredienceIds[j] >= 7 && currentRecipe.ingredienceIds[j] <= 9) {
+        for (int j = 0; j < numberOfIngredients; j++) {
+            if (currentRecipe.ingredientIds[j] >= 7 && currentRecipe.ingredientIds[j] <= 9) {
                 fridge = 1;
                 break;
             }
@@ -211,8 +211,8 @@ void* bakerActivities(void* bakerId) {
         if (fridge == 1) {
             acquire.sem_num = 1; // fridgeIndex
             acquireSemaphore();
-            for (int k = 0; k < numberOfIngreadients; k++) {
-                int fridgeId = currentRecipe.ingredienceIds[k];
+            for (int k = 0; k < numberOfIngredients; k++) {
+                int fridgeId = currentRecipe.ingredientIds[k];
                 if (fridgeId >= 7 && fridgeId <= 9) {
                     printf("Baker %s is getting the %s ingredient from the fridge\n", color, ingredients[fridgeId-1]);
                 }  
@@ -229,7 +229,7 @@ void* bakerActivities(void* bakerId) {
             release.sem_num = 1;
             releaseSemaphore();
         }
-        for (int k = 0; k < 3; k++) { // aquier tools loop
+        for (int k = 0; k < 3; k++) { // acquire tools loop
             
             if (currentRecipe.toolIds[k] == 10) {
                 acquire.sem_num = 2; // mixerIndex
@@ -266,12 +266,12 @@ void* bakerActivities(void* bakerId) {
             i -= 1;
             continue;
         } 
-        printf("Baker %s got all of the tools, now mixing the ingerediens together\n", color);
+        printf("Baker %s got all of the tools, now mixing the ingredients together\n", color);
         for (int l = 0; l < 3; l++)  {   // release loop
             if (currentRecipe.toolIds[l] == 10) {
                 release.sem_num = 2;
                 releaseSemaphore();
-                printf("releaseing the mixer\n");
+                printf("releasing the mixer\n");
             }
             if (currentRecipe.toolIds[l] == 11) {
                 release.sem_num = 3;
@@ -284,7 +284,7 @@ void* bakerActivities(void* bakerId) {
                 printf("releasing the spoon\n");
             }
         }
-        if (currentRecipe.toolIds[3] == 13) { // there is only one oven so no need for a looop
+        if (currentRecipe.toolIds[3] == 13) { // there is only one oven so no need for a loop
             acquire.sem_num = 5; // ovenIndex
             acquireSemaphore();
             printf("Baker %s got the oven and is baking the %s recipe\n", color, currentRecipe.recipeName);
